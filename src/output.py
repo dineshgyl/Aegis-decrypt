@@ -91,9 +91,9 @@ class Output:
                 save_filename = (
                     self.export_path
                     + self.gen_filename(entry.get("name"), entry.get("issuer"))
-                    + ".svg"
+                    + ".png"
                 )
-                img.svg(save_filename, scale=4, background="#fff")
+                img.png(save_filename, scale=4, background="#fff")
                 print(
                     f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - TOTP QRCode saved as: {save_filename}"
                 )

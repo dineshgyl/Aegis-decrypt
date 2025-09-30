@@ -13,10 +13,10 @@ keywords = ["otp-generator", "AEGIS", "2FA", "authenticator"]
 dependencies = [
     "cryptography>=45.0",
     "docopt>=0.6",
-    "pillow>=8.4",
     "pycryptodome>=3.23",
     "pyotp>=2.9",
-    "pyqrcode>=1.2"
+    "pyqrcode>=1.2",
+    "pypng (>=0.20220715.0,<0.20220716.0)"
 ]
 
 
