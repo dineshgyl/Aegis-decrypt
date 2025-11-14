@@ -60,7 +60,7 @@ def main():
         entries = db.get_all()
     else:
         entries = db.get_by_name(args.entryname, args.issuer)
-
+    
     if entries:
         output = Output(entries, args.entryname)
 
