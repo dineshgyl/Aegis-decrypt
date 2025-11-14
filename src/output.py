@@ -45,6 +45,7 @@ class Output:
                 "algo",
                 "digits",
                 "period",
+                "note",
             ]
             writer.writerow(header)
             for entry in self.entries:
@@ -58,6 +59,7 @@ class Output:
                         entry["info"]["algo"],
                         entry["info"]["digits"],
                         entry["info"].get("period", ""),
+                        entry['note'],
                     ]
                 )
 
