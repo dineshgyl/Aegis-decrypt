@@ -29,7 +29,7 @@ class Output:
         # FIXME missing header
         for entry in self.entries:
             print(
-                f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}"
+                f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')} {entry['note']}"
             )
 
     def csv(self):
@@ -66,11 +66,11 @@ class Output:
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - TOTP generated: {totp.generate_code()}"
+                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - TOTP generated: {totp.generate_code()}"
                 )
             else:
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - OTP type not supported: {entry.get("type", "")}"
+                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - OTP type not supported: {entry.get('type', '')}"
                 )
 
     def json(self):
@@ -95,11 +95,11 @@ class Output:
                 )
                 img.png(save_filename, scale=4, background="#fff")
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - TOTP QRCode saved as: {save_filename}"
+                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - TOTP QRCode saved as: {save_filename}"
                 )
             else:
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - OTP type not supported: {entry.get("type", "")}"
+                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - OTP type not supported: {entry.get('type', '')}"
                 )
 
     def valid_filename_char(self, c):
