@@ -4,7 +4,7 @@ import json
 import os
 
 from src.entry_totp import EntryTOTP
-
+from urllib.parse import quote
 
 class Output:
     """
@@ -31,6 +31,28 @@ class Output:
             print(
                 f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')} {entry['note']}"
             )
+
+    def otpauth(self):
+        # FIXME missing header
+        path = self.export_path + ".txt"
+
+        for entry in self.entries:
+                Lissuer = quote(entry["issuer"])
+                Lname = quote(entry["name"])
+                Lsecret = quote(entry["info"]["secret"])
+                Ldigits = entry["info"]["digits"]
+                Lurl = (
+                        f"otpauth://totp/{Lissuer}:{Lname}"
+                        f"?secret={Lsecret}"
+                        f"&digits={Ldigits}"
+                        f"&issuer={Lissuer}"
+                    )
+                #print(Lurl)
+                with open(path, "a", encoding="utf-8") as f:
+                    f.write(Lurl + "\n")
+
+        print('WARNING! The produced unencrypted TXT.')
+        print(f"Entries unencrypted saved as: {path}")
 
     def csv(self):
         path = self.file_path + ".csv"
