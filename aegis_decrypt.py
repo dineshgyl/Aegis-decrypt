@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-usage: aegis_decrypt.py [-h] --vault VAULT [--entryname ENTRYNAME] [--issuer ISSUER] [--output {stdout,csv,qrcode,json,otp}] [--password PASSWORD]
+usage: aegis_decrypt.py [-h] --vault VAULT [--entryname ENTRYNAME] [--issuer ISSUER] [--output {stdout,csv,qrcode,json,otp,otpauth}] [--password PASSWORD]
 password: test
 """
 
@@ -40,7 +40,7 @@ def main():
         "--output",
         dest="output",
         required=False,
-        choices=["csv", "qrcode", "json", "otp", "stdout"],
+        choices=["csv", "qrcode", "json", "otp", "stdout","otpauth"],
         default="stdout",
         help="The output format. Default: %(default)s",
     )
@@ -73,6 +73,8 @@ def main():
                 output.json()
             case "otp":
                 output.otp()
+            case "otpauth":
+                output.otpauth()
             case _:
                 output.stdout()
     else:
