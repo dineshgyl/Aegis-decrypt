@@ -66,11 +66,11 @@ class Output:
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - TOTP generated: {totp.generate_code()}"
+                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - TOTP generated: {totp.generate_code():<6}"
                 )
             else:
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - OTP type not supported: {entry.get("type", "")}"
+                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - OTP type not supported: {entry.get("type", ""):<6}"
                 )
 
     def json(self):
@@ -95,11 +95,11 @@ class Output:
                 )
                 img.png(save_filename, scale=4, background="#fff")
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - TOTP QRCode saved as: {save_filename}"
+                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - TOTP QRCode saved as: {save_filename:<100}"
                 )
             else:
                 print(
-                    f"Entry {entry.get("name", "")} - issuer {entry.get("issuer", "")} - OTP type not supported: {entry.get("type", "")}"
+                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - OTP type not supported: {entry.get("type", ""):<6}"
                 )
 
     def valid_filename_char(self, c):

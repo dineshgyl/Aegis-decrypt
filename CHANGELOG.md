@@ -1,11 +1,15 @@
 # Changelog
+## v0.0.5
+Added the possibility of reading the most recent vault from a folder.
+Improved error handling.
+
 ## v0.0.4
 Remove None as an output choice. Replace it with 'stdout' for clarity. Set 'stdout' as the default output format.
 
 ## v0.0.3
-Changed package manager from Pipenv to Poetry
-Added QA tools: bandit, black, pylint, pyupgrade
-Reformatted project filenames
+Changed package manager from Pipenv to Poetry.
+Added QA tools: bandit, black, pylint, pyupgrade.
+Reformatted project filenames.
 
 ## v0.0.2
 Added ISSUER as a CLI argument.

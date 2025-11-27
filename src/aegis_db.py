@@ -1,7 +1,6 @@
 import base64
 import io
 import json
-import sys
 
 import cryptography
 import cryptography.exceptions
@@ -21,16 +20,24 @@ class AegisDB:
         self.entries = self.decrypt_db(password)
 
     def __die(self, msg, code=1):
-        print(msg, file=sys.stderr)
-        sys.exit(code)
+        raise Exception(f"{msg}: {code}")
 
     # decrypt the Aegis vault file to a Python object
     def decrypt_db(self, password):
         with io.open(self.db_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # extract all password slots from the header
+        if "header" not in data:
+            raise ValueError("'header' key is missing in the JSON file.")
+
         header = data["header"]
+
+        # extract all password slots from the header
+        if not isinstance(header["slots"], list):
+            raise ValueError(
+                "'slots' key must have a list as its value in the JSON file."
+            )
+
         slots = [slot for slot in header["slots"] if slot["type"] == 1]
 
         # try the given password on every slot until one succeeds
@@ -61,14 +68,17 @@ class AegisDB:
                 pass
 
         if master_key is None:
-            self.__die(
-                "error: unable to decrypt the master key with the given password"
-            )
+            raise ValueError("Unable to decrypt the master key with the given password.")
 
         # decode the base64 vault contents
         content = base64.b64decode(data["db"])
 
         # decrypt the vault contents using the master key
+        if not isinstance(header["params"], dict):
+            raise ValueError(
+                "'params' key must have a dict as its value in the JSON file."
+            )
+
         params = header["params"]
         cipher = AESGCM(master_key)
         db = cipher.decrypt(

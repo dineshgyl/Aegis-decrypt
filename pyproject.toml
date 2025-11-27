@@ -1,6 +1,6 @@
 [project]
 name = "scollovati-aegis-decrypt"
-version = "v0.0.4"
+version = "v0.0.5"
 description = "A backup decryptor and OTP generator for the vault of the Aegis Authenticator Android app."
 authors = [
     {name = "scollovati"}
@@ -16,7 +16,8 @@ dependencies = [
     "pycryptodome>=3.23",
     "pyotp>=2.9",
     "pyqrcode>=1.2",
-    "pypng (>=0.20220715.0,<0.20220716.0)"
+    "pypng (>=0.20220715.0,<0.20220716.0)",
+    "keyring (>=25.6.0,<26.0.0)",
 ]
 
 
