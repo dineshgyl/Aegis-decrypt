@@ -54,7 +54,7 @@ def main():
     args = parser.parse_args()
 
     if path.isfile(args.vault):
-        db = AegisDB(args.vault, get_password(args))
+        db = AegisDB(args.vault, _get_password(args))
     elif path.isdir(args.vault):
         files = glob(path.join(args.vault, "*"))  # Get all files in the folder
         if not files:
@@ -63,7 +63,7 @@ def main():
         # Sort files by modification time (newest first)
         sorted_files = sorted(files, key=path.getmtime, reverse=True)
         print(f"Using file {sorted_files[0]}")
-        db = AegisDB(sorted_files[0], get_password(args))
+        db = AegisDB(sorted_files[0], _get_password(args))
     else:
         raise ValueError(f"Invalid file or folder: {args.vault}")
 
@@ -91,7 +91,7 @@ def main():
         print("No entries found.")
 
 
-def get_password(args):
+def _get_password(args):
     if args.password is None:
         password = getpass.getpass().encode("utf-8")
     else:

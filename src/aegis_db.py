@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import os
 
 import cryptography
 import cryptography.exceptions
@@ -15,16 +16,84 @@ class AegisDB:
     """
 
     def __init__(self, db_path, password):
-        self.backend = default_backend()
-        self.db_path = db_path
-        self.entries = self.decrypt_db(password)
+        """
+        db_path and password: used for both encryption and decryption.
+        """
+        self._backend = default_backend()
+        self._db_path = db_path
+        self._password = password
 
-    def __die(self, msg, code=1):
-        raise Exception(f"{msg}: {code}")
+    def encrypt(self, entries):
+        """
+        Encrypts the given entries into an Aegis vault file at db_path.
+        """
+
+        # 1. Generate a random Master Key (32 bytes for AES-256)
+        master_key = os.urandom(32)
+
+        # 2. Encrypt the Database Content
+        # The vault content is a JSON object wrapping the entries list
+        payload = json.dumps({"entries": entries}).encode("utf-8")
+
+        # AES-GCM encrypts payload using the Master Key
+        cipher_db = AESGCM(master_key)
+        nonce_db = os.urandom(12)
+        # encrypt returns ciphertext + tag
+        encrypted_db = cipher_db.encrypt(nonce_db, payload, None)
+
+        # Split ciphertext and tag (last 16 bytes)
+        tag_db = encrypted_db[-16:]
+        ciphertext_db = encrypted_db[:-16]
+
+        # 3. Create a Password Slot (Type 1) to protect the Master Key
+        # Derive a key from the user password using Scrypt
+        salt = os.urandom(32)
+        n, r, p = 16384, 8, 1  # Standard Aegis Scrypt parameters
+
+        kdf = Scrypt(
+            salt=salt,
+            length=32,
+            n=n,
+            r=r,
+            p=p,
+            backend=backend,
+        )
+        derived_key = kdf.derive(self._password)
+
+        # Encrypt the Master Key using the derived key
+        cipher_key = AESGCM(derived_key)
+        nonce_key = os.urandom(12)
+        encrypted_master_key = cipher_key.encrypt(nonce_key, master_key, None)
+
+        tag_key = encrypted_master_key[-16:]
+        ciphertext_key = encrypted_master_key[:-16]
+
+        # 4. Construct the Vault JSON structure
+        vault_data = {
+            "version": 1,
+            "header": {
+                "slots": [
+                    {
+                        "type": 1,
+                        "salt": salt.hex(),
+                        "n": n,
+                        "r": r,
+                        "p": p,
+                        "key": ciphertext_key.hex(),
+                        "key_params": {"nonce": nonce_key.hex(), "tag": tag_key.hex()},
+                    }
+                ],
+                "params": {"nonce": nonce_db.hex(), "tag": tag_db.hex()},
+            },
+            "db": base64.b64encode(ciphertext_db).decode("utf-8"),
+        }
+
+        with io.open(self._db_path, "w", encoding="utf-8") as f:
+            json.dump(vault_data, f, indent=4)
 
     # decrypt the Aegis vault file to a Python object
-    def decrypt_db(self, password):
-        with io.open(self.db_path, "r", encoding="utf-8") as f:
+    def decrypt(self):
+        with io.open(self._db_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         if "header" not in data:
@@ -50,9 +119,9 @@ class AegisDB:
                 n=slot["n"],
                 r=slot["r"],
                 p=slot["p"],
-                backend=self.backend,
+                backend=self._backend,
             )
-            key = kdf.derive(password)
+            key = kdf.derive(self._password)
 
             # try to use the derived key to decrypt the master key
             cipher = AESGCM(key)
@@ -68,7 +137,9 @@ class AegisDB:
                 pass
 
         if master_key is None:
-            raise ValueError("Unable to decrypt the master key with the given password.")
+            raise ValueError(
+                "Unable to decrypt the master key with the given password."
+            )
 
         # decode the base64 vault contents
         content = base64.b64decode(data["db"])
@@ -90,12 +161,12 @@ class AegisDB:
         return json.loads(db.decode("utf-8"))["entries"]
 
     def get_all(self):
-        return self.entries
+        return self.decrypt()
 
     def get_by_name(self, name, issuer):
         entries_found = []
 
-        for entry in self.entries:
+        for entry in self.decrypt():
             db_name = entry.get("name", "")
             db_issuer = entry.get("issuer", "")
 
