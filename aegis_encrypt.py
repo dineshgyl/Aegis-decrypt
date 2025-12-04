@@ -6,7 +6,7 @@ from src.aegis_db import AegisDB
 import sys
 
 
-def main():
+def main() -> None:
 
     with io.open("./testdata/aegis_plain.json", "r", encoding="utf-8") as f:
         data = json.load(f)

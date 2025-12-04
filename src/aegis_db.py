@@ -15,15 +15,15 @@ class AegisDB:
     Class to decrypt and search inside the Aegis vault db.
     """
 
-    def __init__(self, db_path, password):
+    def __init__(self, db_path: str, password: str):
         """
         db_path and password: used for both encryption and decryption.
         """
         self._backend = default_backend()
         self._db_path = db_path
-        self._password = password
+        self._password = password.encode("utf-8")
 
-    def encrypt(self, entries):
+    def encrypt(self, entries: dict) -> None:
         """
         Encrypts the given entries into an Aegis vault file at db_path.
         """
@@ -56,7 +56,7 @@ class AegisDB:
             n=n,
             r=r,
             p=p,
-            backend=backend,
+            backend=self._backend,
         )
         derived_key = kdf.derive(self._password)
 
@@ -92,7 +92,7 @@ class AegisDB:
             json.dump(vault_data, f, indent=4)
 
     # decrypt the Aegis vault file to a Python object
-    def decrypt(self):
+    def decrypt(self) -> dict:
         with io.open(self._db_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -158,15 +158,21 @@ class AegisDB:
             associated_data=None,
         )
 
-        return json.loads(db.decode("utf-8"))["entries"]
+        return json.loads(db.decode("utf-8"))
 
-    def get_all(self):
-        return self.decrypt()
+    def get_all(self) -> dict:
+        return self.decrypt()["entries"]
 
-    def get_by_name(self, name, issuer):
-        entries_found = []
+    def get_groups(self) -> dict:
+        return self.decrypt()["groups"]
 
-        for entry in self.decrypt():
+    def get_group_by_uuid(self, uuid: str) -> str:
+        return self.get_groups().get(uuid, "GROUP NOT FOUND")
+
+    def get_by_name(self, name: str, issuer: str) -> dict:
+        entries_found = {}
+
+        for entry in self.get_all():
             db_name = entry.get("name", "")
             db_issuer = entry.get("issuer", "")
 
@@ -174,6 +180,6 @@ class AegisDB:
             if (name is None or name.lower() in db_name.lower()) and (
                 issuer is None or issuer.lower() in db_issuer.lower()
             ):
-                entries_found.append(entry)
+                entries_found.update(entry)
 
         return entries_found

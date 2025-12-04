@@ -8,11 +8,12 @@ import getpass
 import sys
 from os import path
 from glob import glob
+
 from src.aegis_db import AegisDB
 from src.output import Output
 
 
-def main():
+def main() -> None:
     """
     Aegis decryptor main function.
     """
@@ -91,11 +92,11 @@ def main():
         print("No entries found.")
 
 
-def _get_password(args):
+def _get_password(args) -> str:
     if args.password is None:
-        password = getpass.getpass().encode("utf-8")
+        password = getpass.getpass()
     else:
-        password = args.password.encode("utf-8")
+        password = args.password
     return password
 
 

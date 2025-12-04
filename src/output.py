@@ -28,13 +28,15 @@ class Output:
             )
 
     def stdout(self):
-        # FIXME missing header
+        # TODO add columns header
+        # TODO add groups
         for entry in self._entries:
             print(
                 f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}"
             )
 
     def csv(self):
+        # TODO add groups
         path = self.file_path + ".csv"
         with io.open(path, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
@@ -76,6 +78,7 @@ class Output:
                 )
 
     def json(self):
+        # TODO add aegis headers and groups
         path = self._export_path + ".json"
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(json.dumps(self._entries, indent=4))
@@ -85,7 +88,7 @@ class Output:
             print(f"Entries unencrypted saved as: {path}")
 
     def qrcode(self):
-        # FIXME put all QRcodes in PDF
+        # TODO put all QRcodes in a well formatted PDF
         for entry in self._entries:
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
@@ -104,10 +107,10 @@ class Output:
                     f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - OTP type not supported: {entry.get("type", ""):<6}"
                 )
 
-    def _valid_filename_char(self, c):
+    def _valid_filename_char(self, c: str) -> bool:
         return c.isalpha() or c.isdigit() or c in "@_-"
 
-    def _gen_filename(self, entry_name, entry_issuer=None):
+    def _gen_filename(self, entry_name: str, entry_issuer: str | None = None) -> str:
         parts = []
         label = entry_name
         if label:
