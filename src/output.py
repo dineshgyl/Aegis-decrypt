@@ -13,9 +13,9 @@ class Output:
 
     _FILENAME_PLAIN = "aegis_plain"
 
-    def __init__(self, entries, entry_name=None, export_path="./export/"):
+    def __init__(self, entries, entry_name=None, export_base_path="."):
         self._entries = entries
-        self._export_path = export_path
+        self._export_path = export_base_path + "/export/"
 
         os.makedirs(os.path.dirname(self._export_path), exist_ok=True)
         if entry_name is None:

@@ -183,3 +183,6 @@ class AegisDB:
                 entries_found.update(entry)
 
         return entries_found
+
+    def get_db_path(self) -> str:
+        return self._db_path

@@ -19,7 +19,7 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         prog="aegis_decrypt.py",
-        description="Decrypt an Aegis vault and produce an output as requested. Exported files are created in the folder `./export/` inside the project itself.",
+        description="Decrypt an Aegis vault and produce an output as requested. Exported and unencrypted files are placed in a folder `export/` created inside the folder where the vault is.",
         add_help=True,
     )
     parser.add_argument(
@@ -74,7 +74,7 @@ def main() -> None:
         entries = db.get_by_name(args.entryname, args.issuer)
 
     if entries:
-        output = Output(entries, args.entryname)
+        output = Output(entries, args.entryname, path.dirname(db.get_db_path()))
 
         match args.output:
             case "csv":
