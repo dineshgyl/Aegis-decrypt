@@ -70,8 +70,10 @@ def main() -> None:
 
     if args.entryname is None and args.issuer is None:
         entries = db.get_all()
+        print(f"Found {len(entries)} entries.")
     else:
         entries = db.get_by_name(args.entryname, args.issuer)
+        print(f"Found {len(entries)} entries filtering by {args.entryname} entry name and {args.issuer} issuer.")
 
     if entries:
         output = Output(entries, args.entryname, path.dirname(db.get_db_path()))

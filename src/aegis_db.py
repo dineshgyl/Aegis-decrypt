@@ -160,7 +160,7 @@ class AegisDB:
 
         return json.loads(db.decode("utf-8"))
 
-    def get_all(self) -> dict:
+    def get_all(self) -> list:
         return self.decrypt()["entries"]
 
     def get_groups(self) -> dict:
@@ -169,8 +169,8 @@ class AegisDB:
     def get_group_by_uuid(self, uuid: str) -> str:
         return self.get_groups().get(uuid, "GROUP NOT FOUND")
 
-    def get_by_name(self, name: str, issuer: str) -> dict:
-        entries_found = {}
+    def get_by_name(self, name: str, issuer: str) -> list:
+        entries_found = []
 
         for entry in self.get_all():
             db_name = entry.get("name", "")
@@ -180,7 +180,7 @@ class AegisDB:
             if (name is None or name.lower() in db_name.lower()) and (
                 issuer is None or issuer.lower() in db_issuer.lower()
             ):
-                entries_found.update(entry)
+                entries_found.append(entry)
 
         return entries_found
 

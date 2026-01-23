@@ -1,4 +1,7 @@
 # Changelog
+## v0.0.6
+The export folder now is inside the vault directory.
+
 ## v0.0.5
 Added the possibility of reading the most recent vault from a folder.
 Improved error handling.

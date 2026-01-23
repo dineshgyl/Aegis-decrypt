@@ -13,7 +13,7 @@ class Output:
 
     _FILENAME_PLAIN = "aegis_plain"
 
-    def __init__(self, entries, entry_name=None, export_base_path="."):
+    def __init__(self, entries: list, entry_name:str|None = None, export_base_path: str = "."):
         self._entries = entries
         self._export_path = export_base_path + "/export/"
 
@@ -27,7 +27,7 @@ class Output:
                 + self._gen_filename(entry_name.lower())
             )
 
-    def stdout(self):
+    def stdout(self) -> None:
         # TODO add columns header
         # TODO add groups
         for entry in self._entries:
@@ -35,7 +35,7 @@ class Output:
                 f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}"
             )
 
-    def csv(self):
+    def csv(self) -> None:
         # TODO add groups
         path = self.file_path + ".csv"
         with io.open(path, "w", newline="", encoding="utf-8") as csvfile:
@@ -65,7 +65,7 @@ class Output:
                     ]
                 )
 
-    def otp(self):
+    def otp(self) -> None:
         for entry in self._entries:
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
@@ -77,17 +77,17 @@ class Output:
                     f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - OTP type not supported: {entry.get("type", ""):<6}"
                 )
 
-    def json(self):
+    def json(self) -> None:
         # TODO add aegis headers and groups
-        path = self._export_path + ".json"
+        path = self.file_path + ".json"
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(json.dumps(self._entries, indent=4))
             print(
                 'WARNING! The produced unencrypted JSON has not the same structure of the Aegis unencrypted export. This JSON contains only the "entries" array.'
             )
-            print(f"Entries unencrypted saved as: {path}")
+            print(f"Unencrypted vault saved as: {path}")
 
-    def qrcode(self):
+    def qrcode(self) -> None:
         # TODO put all QRcodes in a well formatted PDF
         for entry in self._entries:
             if entry.get("type", "") == "totp":

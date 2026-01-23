@@ -20,7 +20,7 @@ class EntryTOTP:
         """
         return self._totp.now()
 
-    def generate_qr_code(self) -> QRCode | None:
+    def generate_qr_code(self) -> QRCode:
         """
         Generate the QR Code for the current TOTP entry
         """
@@ -29,4 +29,4 @@ class EntryTOTP:
         )
         if url:
             return pyqrcode.create(url)
-        return None
+        raise Exception(f"Unable to generate QR Code for entry {self._entry["name"]} with issuer {self._entry['issuer']}")
