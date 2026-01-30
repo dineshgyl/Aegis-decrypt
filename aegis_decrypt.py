@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument(
         "--vault",
         dest="vault",
-        required=True,
+        required=False,
         help="The encrypted Aegis vault file or a folder containing only Aegis vault files. If it is a folder, the most recent file is considered.",
     )
     # optional args
@@ -33,13 +33,13 @@ def main() -> None:
         "--entryname",
         dest="entryname",
         required=False,
-        help="The name of the entry for which you want to generate the OTP code.",
+        help="The name of the entry for which you want to generate the output.",
     )
     parser.add_argument(
         "--issuer",
         dest="issuer",
         required=False,
-        help="The name of the issuer for which you want to generate the OTP code.",
+        help="The name of the issuer for which you want to generate the output.",
     )
     parser.add_argument(
         "--search",
@@ -53,12 +53,26 @@ def main() -> None:
         required=False,
         choices=["csv", "qrcode", "json", "otp", "stdout","otpauth"],
         default="otp",
-        help="The output format. Default: %(default)s",
+        help="The output format. OTP generation is supported only for TOTP protocol. Default: %(default)s",
     )
     parser.add_argument(
         "--password", dest="password", required=False, help="The encryption password."
     )
+    parser.add_argument(
+        "--license",
+        help="Show license file.",
+        action="store_true")
     args = parser.parse_args()
+
+    if license:
+        with open('LICENSE', 'r') as file:
+            content = file.read()
+        print(content)
+        sys.exit()
+
+    if args.vault is None:
+        print("No vault specified.")
+        sys.exit()
 
     if path.isfile(args.vault):
         db = AegisDB(args.vault, _get_password(args))

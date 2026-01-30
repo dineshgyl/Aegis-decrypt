@@ -7,12 +7,17 @@ import sys
 
 
 def main() -> None:
+    plain = "./testdata/aegis_plain.json"
+    encrypted = "./testdata/aegis_encrypted_TEST.json"
 
-    with io.open("./testdata/aegis_plain.json", "r", encoding="utf-8") as f:
+    print(f"Use this script at your own risk! It has been built mainly for testing purposes.")
+    print(f"This script will encrypt the file {plain} and save it as {encrypted}.")
+
+    with io.open(plain, "r", encoding="utf-8") as f:
         data = json.load(f)
     entries = data["db"]["entries"]
 
-    db = AegisDB("testdata/aegis_encrypted_TEST.json", "test")
+    db = AegisDB(encrypted, "test")
     db.encrypt(entries)
 
 
