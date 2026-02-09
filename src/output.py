@@ -35,11 +35,11 @@ class Output:
                 f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')} {entry['note']}"
             )
 
-    def otpauth(self):
+    def otpauth(self) -> None:
         # FIXME missing header
-        path = self.export_path + ".txt"
+        path = self.file_path + ".txt"
 
-        for entry in self.entries:
+        for entry in self._entries:
                 Lissuer = quote(entry["issuer"])
                 Lname = quote(entry["name"])
                 Lsecret = quote(entry["info"]["secret"])
@@ -123,13 +123,9 @@ class Output:
                     + ".png"
                 )
                 img.png(save_filename, scale=4, background="#fff")
-                print(
-                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - TOTP QRCode saved as: {save_filename:<100}"
-                )
+                print(f"Entry {entry.get('name', '')} - Issuer {entry.get('issuer', '')} - TOTP QRCode saved as: {save_filename}"               )
             else:
-                print(
-                    f"Entry {entry.get("name", ""):<25} - Issuer {entry.get("issuer", ""):<25} - OTP type not supported: {entry.get("type", ""):<6}"
-                )
+                print(f"Entry {entry.get('name', '')} - Issuer {entry.get('issuer', '')} - OTP type not supported: {entry.get('type', '')}")
 
     def _valid_filename_char(self, c: str) -> bool:
         return c.isalpha() or c.isdigit() or c in "@_-"
