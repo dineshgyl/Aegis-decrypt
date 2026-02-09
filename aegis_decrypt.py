@@ -1,27 +1,32 @@
 #!/usr/bin/env python3
 """
-usage: aegis_decrypt.py [-h] --vault VAULT [--entryname ENTRYNAME] [--issuer ISSUER] [--output {stdout,csv,qrcode,json,otp,otpauth}] [--password PASSWORD]
-password: test
+example usage: poetry run python aegis_decrypt.py -h
 """
 
 import argparse
 import getpass
+import sys
+from os import path
+from glob import glob
 
 from src.aegis_db import AegisDB
 from src.output import Output
 
 
-def main():
+def main() -> None:
     """
     Aegis decryptor main function.
     """
     parser = argparse.ArgumentParser(
         prog="aegis_decrypt.py",
-        description="Decrypt an Aegis vault and produce an output as requested.",
+        description="Decrypt an Aegis vault and produce an output as requested. Exported and unencrypted files are placed in a folder `export/` created inside the folder where the vault is.",
         add_help=True,
     )
     parser.add_argument(
-        "--vault", dest="vault", required=True, help="The encrypted Aegis vault file."
+        "--vault",
+        dest="vault",
+        required=True,
+        help="The encrypted Aegis vault file or a folder containing only Aegis vault files. If it is a folder, the most recent file is considered.",
     )
     # optional args
     parser.add_argument(
@@ -49,20 +54,29 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.password is None:
-        password = getpass.getpass().encode("utf-8")
-    else:
-        password = args.password.encode("utf-8")
+    if path.isfile(args.vault):
+        db = AegisDB(args.vault, _get_password(args))
+    elif path.isdir(args.vault):
+        files = glob(path.join(args.vault, "*"))  # Get all files in the folder
+        if not files:
+            raise ValueError(f"Directory {args.vault} is empty.")
 
-    db = AegisDB(args.vault, password)
+        # Sort files by modification time (newest first)
+        sorted_files = sorted(files, key=path.getmtime, reverse=True)
+        print(f"Using file {sorted_files[0]}")
+        db = AegisDB(sorted_files[0], _get_password(args))
+    else:
+        raise ValueError(f"Invalid file or folder: {args.vault}")
 
     if args.entryname is None and args.issuer is None:
         entries = db.get_all()
+        print(f"Found {len(entries)} entries.")
     else:
         entries = db.get_by_name(args.entryname, args.issuer)
-    
+        print(f"Found {len(entries)} entries filtering by {args.entryname} entry name and {args.issuer} issuer.")
+
     if entries:
-        output = Output(entries, args.entryname)
+        output = Output(entries, args.entryname, path.dirname(db.get_db_path()))
 
         match args.output:
             case "csv":
@@ -75,11 +89,24 @@ def main():
                 output.otp()
             case "otpauth":
                 output.otpauth()
-            case _:
+            case "stdout":
                 output.stdout()
+
     else:
-        print("No entries found")
+        print("No entries found.")
+
+
+def _get_password(args) -> str:
+    if args.password is None:
+        password = getpass.getpass()
+    else:
+        password = args.password
+    return password
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)

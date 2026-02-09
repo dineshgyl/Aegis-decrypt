@@ -9,8 +9,8 @@ class EntryTOTP:
     """
 
     def __init__(self, entry):
-        self.entry = entry
-        self.totp = pyotp.TOTP(
+        self._entry = entry
+        self._totp = pyotp.TOTP(
             entry["info"]["secret"], interval=entry["info"]["period"]
         )
 
@@ -18,15 +18,15 @@ class EntryTOTP:
         """
         Generate the current TOTP code
         """
-        return self.totp.now()
+        return self._totp.now()
 
-    def generate_qr_code(self) -> QRCode | None:
+    def generate_qr_code(self) -> QRCode:
         """
         Generate the QR Code for the current TOTP entry
         """
-        url = self.totp.provisioning_uri(
-            self.entry["name"], issuer_name=self.entry["issuer"]
+        url = self._totp.provisioning_uri(
+            self._entry["name"], issuer_name=self._entry["issuer"]
         )
         if url:
             return pyqrcode.create(url)
-        return None
+        raise Exception(f"Unable to generate QR Code for entry {self._entry["name"]} with issuer {self._entry['issuer']}")
