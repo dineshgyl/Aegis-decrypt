@@ -20,6 +20,17 @@ class EntryTOTP:
         """
         return self._totp.now()
 
+    def generate_otpauthurl(self) -> str:
+        """
+        Generate the otpauth url for the current TOTP entry
+        """
+        url = self._totp.provisioning_uri(
+            self._entry["name"], issuer_name=self._entry["issuer"]
+        )
+        if url:
+            return url
+        raise Exception(f"Unable to generate otpauth url for entry {self._entry['name']} with issuer {self._entry['issuer']}")
+    
     def generate_qr_code(self) -> QRCode:
         """
         Generate the QR Code for the current TOTP entry
