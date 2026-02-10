@@ -46,7 +46,7 @@ def main() -> None:
         dest="output",
         required=False,
         choices=["csv", "qrcode", "json", "otp", "stdout","otpauth"],
-        default="stdout",
+        default="otp",
         help="The output format. Default: %(default)s",
     )
     parser.add_argument(
