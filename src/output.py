@@ -4,7 +4,6 @@ import json
 import os
 
 from src.entry_totp import EntryTOTP
-from urllib.parse import quote
 
 class Output:
     """
