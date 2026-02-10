@@ -37,24 +37,20 @@ class Output:
 
     def otpauth(self) -> None:
         # FIXME missing header
-        path = self.file_path + ".txt"
+        path = self.file_path + ".csv"
 
         for entry in self._entries:
-                Lissuer = quote(entry["issuer"])
-                Lname = quote(entry["name"])
-                Lsecret = quote(entry["info"]["secret"])
-                Ldigits = entry["info"]["digits"]
-                Lurl = (
-                        f"otpauth://totp/{Lissuer}:{Lname}"
-                        f"?secret={Lsecret}"
-                        f"&digits={Ldigits}"
-                        f"&issuer={Lissuer}"
-                    )
-                #print(Lurl)
+            if entry.get("type", "") == "totp":
+                totp = EntryTOTP(entry)
+                Lurl = totp.generate_otpauthurl()
                 with open(path, "a", encoding="utf-8") as f:
                     f.write(Lurl + "\n")
+            else:
+                print(
+                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - OTP type not supported: {entry.get('type', ''):<6}"
+                )
 
-        print('WARNING! The produced unencrypted TXT.')
+        print('WARNING! The produced unencrypted CSV.')
         print(f"Entries unencrypted saved as: {path}")
 
     def csv(self) -> None:
@@ -94,11 +90,11 @@ class Output:
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
                 print(
-                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - TOTP generated: {totp.generate_code()}"
+                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - TOTP generated: {totp.generate_code():<6}"
                 )
             else:
                 print(
-                    f"Entry {entry.get('name', '')} - issuer {entry.get('issuer', '')} - OTP type not supported: {entry.get('type', '')}"
+                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - OTP type not supported: {entry.get('type', ''):<6}"
                 )
 
     def json(self) -> None:
@@ -123,9 +119,13 @@ class Output:
                     + ".png"
                 )
                 img.png(save_filename, scale=4, background="#fff")
-                print(f"Entry {entry.get('name', '')} - Issuer {entry.get('issuer', '')} - TOTP QRCode saved as: {save_filename}"               )
+                print(
+                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - TOTP QRCode saved as: {save_filename:<100}"
+                )
             else:
-                print(f"Entry {entry.get('name', '')} - Issuer {entry.get('issuer', '')} - OTP type not supported: {entry.get('type', '')}")
+                print(
+                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - OTP type not supported: {entry.get('type', ''):<6}"
+                )
 
     def _valid_filename_char(self, c: str) -> bool:
         return c.isalpha() or c.isdigit() or c in "@_-"
