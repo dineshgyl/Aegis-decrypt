@@ -184,5 +184,36 @@ class AegisDB:
 
         return entries_found
 
+    def search(self, search_term: str) -> list:
+        """
+        Search for a string in all fields of all entries including note field.
+        Returns a list of entries that contain the search term (case-insensitive).
+        """
+        entries_found = []
+        search_lower = search_term.lower()
+
+        for entry in self.get_all():
+            # Search in top-level string fields
+            if (search_lower in entry.get("name", "").lower() or
+                search_lower in entry.get("issuer", "").lower() or
+                search_lower in entry.get("note", "").lower() or
+                search_lower in entry.get("uuid", "").lower() or
+                search_lower in entry.get("type", "").lower()):
+                entries_found.append(entry)
+                continue
+
+            # Search in info fields
+            info = entry.get("info", {})
+            if isinstance(info, dict):
+                for key, value in info.items():
+                    if isinstance(value, str) and search_lower in value.lower():
+                        entries_found.append(entry)
+                        break
+                    elif isinstance(value, (int, float)) and search_lower in str(value).lower():
+                        entries_found.append(entry)
+                        break
+
+        return entries_found
+
     def get_db_path(self) -> str:
         return self._db_path
