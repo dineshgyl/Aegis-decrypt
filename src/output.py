@@ -30,7 +30,7 @@ class Output:
     def _get_note_context(self, note: str) -> str:
         """
         Extract context around the search term in the note field.
-        Shows up to 5 lines before and after the matching line, stopping at blank lines.
+        Shows up to 20 lines before and after the matching line, stopping at blank lines.
         """
         if not self._search_term or not note:
             return note
@@ -44,14 +44,14 @@ class Output:
         if not matching_indices:
             return note  # Return full note if no match (shouldn't happen)
         
-        # Collect context lines (up to 5 before and after each match, stopping at blank lines)
+        # Collect context lines (up to 20 before and after each match, stopping at blank lines)
         context_lines = set()
         for idx in matching_indices:
             # Add the matching line itself
             context_lines.add(idx)
             
-            # Add lines before (up to 5, stop at blank line)
-            for i in range(1, 6):
+            # Add lines before (up to 20, stop at blank line)
+            for i in range(1, 21):
                 prev_idx = idx - i
                 if prev_idx < 0:
                     break
@@ -59,8 +59,8 @@ class Output:
                     break
                 context_lines.add(prev_idx)
             
-            # Add lines after (up to 5, stop at blank line)
-            for i in range(1, 6):
+            # Add lines after (up to 20, stop at blank line)
+            for i in range(1, 21):
                 next_idx = idx + i
                 if next_idx >= len(lines):
                     break
@@ -89,30 +89,40 @@ class Output:
         # TODO add groups
         for entry in self._entries:
             note = entry.get('note', '')
-            if self._search_term and note:
-                note_display = f"  Note: {self._get_note_context(note)}"
-            elif note:
-                note_display = f"  Note: {note}"
-            else:
-                note_display = ""
+            
+            # Print main entry info
             print(
-                f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}{note_display}"
+                f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<20}  {entry['issuer']:<20}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}"
             )
+            
+            # Only show note if --search is specified AND note contains the search term
+            if self._search_term and note and self._search_term.lower() in note.lower():
+                note_context = self._get_note_context(note)
+                # Indent note lines for better readability
+                note_lines = note_context.split('\n')
+                print("  ┌─ Note:")
+                for i, line in enumerate(note_lines):
+                    if i == len(note_lines) - 1:
+                        print(f"  └─ {line}")
+                    else:
+                        print(f"  │  {line}")
+                print()  # Empty line after note for separation
 
     def otpauth(self) -> None:
         # FIXME missing header
-        path = self.file_path + ".csv"
+        path = self.file_path + "_othauth.csv"
 
-        for entry in self._entries:
-            if entry.get("type", "") == "totp":
-                totp = EntryTOTP(entry)
-                Lurl = totp.generate_otpauthurl()
-                with open(path, "a", encoding="utf-8") as f:
+        # Open file in write mode to overwrite if exists
+        with open(path, "w", encoding="utf-8") as f:
+            for entry in self._entries:
+                if entry.get("type", "") == "totp":
+                    totp = EntryTOTP(entry)
+                    Lurl = totp.generate_otpauthurl()
                     f.write(Lurl + "\n")
-            else:
-                print(
-                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - OTP type not supported: {entry.get('type', ''):<6}"
-                )
+                else:
+                    print(
+                        f"Entry {entry.get('name', ''):<40} - Issuer {entry.get('issuer', ''):<30} - OTP type not supported: {entry.get('type', ''):<6}"
+                    )
 
         print('WARNING! The produced unencrypted CSV.')
         print(f"Entries unencrypted saved as: {path}")
@@ -148,27 +158,37 @@ class Output:
                         entry['note'],
                     ]
                 )
+            print('WARNING! The produced unencrypted CSV.')
+            print(f"Entries unencrypted saved as: {path}")
 
     def otp(self) -> None:
         for entry in self._entries:
             note = entry.get('note', '')
-            if self._search_term and note:
-                note_context = self._get_note_context(note)
-                note_display = f" - Note: {note_context}" if note_context else ""
-            elif note:
-                note_display = f" - Note: {note}"
-            else:
-                note_display = ""
             
+            # Print main entry info
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
                 print(
-                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - TOTP generated: {totp.generate_code():<6}{note_display}"
+                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - TOTP generated: {totp.generate_code():<6}"
                 )
             else:
                 print(
-                    f"Entry {entry.get('name', ''):<25} - Issuer {entry.get('issuer', ''):<25} - OTP type not supported: {entry.get('type', ''):<6}{note_display}"
+                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - OTP type not supported: {entry.get('type', ''):<6}"
                 )
+            
+            # Only show note if --search is specified AND note contains the search term
+            if self._search_term and note and self._search_term.lower() in note.lower():
+                note_context = self._get_note_context(note)
+                if note_context:
+                    # Indent note lines for better readability with box drawing characters
+                    note_lines = note_context.split('\n')
+                    print("  ┌─ Note:")
+                    for i, line in enumerate(note_lines):
+                        if i == len(note_lines) - 1:
+                            print(f"  └─ {line}")
+                        else:
+                            print(f"  │  {line}")
+                    print()  # Empty line after note for separation
 
     def json(self) -> None:
         # TODO add aegis headers and groups
