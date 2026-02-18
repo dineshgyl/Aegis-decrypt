@@ -14,3 +14,6 @@ venv/
 export/
 testdata/export/
 temp/
+
+#aegis-backup files
+aegis-backup-*
