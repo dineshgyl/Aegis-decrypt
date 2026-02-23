@@ -39,6 +39,7 @@ options:
 - Execute Black `poetry run black .`
 - Execute MyPy `poetry run mypy .`
 - Execute Pylint `poetry run pylint aegis_decrypt.py src/`
+- Build Executable `pyinstaller --onefile aegis_decrypt.py`
 
 ## Project Management
 Since this repo is spread across several remotes, it may happen that there are some pull/merge requests that need to be handled locally.
