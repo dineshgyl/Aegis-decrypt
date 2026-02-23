@@ -42,10 +42,16 @@ def main() -> None:
         help="The name of the issuer for which you want to generate the OTP code.",
     )
     parser.add_argument(
+        "--search",
+        dest="search",
+        required=False,
+        help="Search for a string in all fields of all entries including the note field.",
+    )
+    parser.add_argument(
         "--output",
         dest="output",
         required=False,
-        choices=["csv", "qrcode", "json", "otp", "stdout"],
+        choices=["csv", "qrcode", "json", "otp", "stdout","otpauth"],
         default="otp",
         help="The output format. Default: %(default)s",
     )
@@ -68,7 +74,10 @@ def main() -> None:
     else:
         raise ValueError(f"Invalid file or folder: {args.vault}")
 
-    if args.entryname is None and args.issuer is None:
+    if args.search is not None:
+        entries = db.search(args.search)
+        print(f"Found {len(entries)} entries matching search term '{args.search}'.")
+    elif args.entryname is None and args.issuer is None:
         entries = db.get_all()
         print(f"Found {len(entries)} entries.")
     else:
@@ -76,7 +85,7 @@ def main() -> None:
         print(f"Found {len(entries)} entries filtering by {args.entryname} entry name and {args.issuer} issuer.")
 
     if entries:
-        output = Output(entries, args.entryname, path.dirname(db.get_db_path()))
+        output = Output(entries, args.entryname, path.dirname(db.get_db_path()), args.search)
 
         match args.output:
             case "csv":
@@ -87,6 +96,8 @@ def main() -> None:
                 output.json()
             case "otp":
                 output.otp()
+            case "otpauth":
+                output.otpauth()
             case "stdout":
                 output.stdout()
 

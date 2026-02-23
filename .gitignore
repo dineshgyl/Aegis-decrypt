@@ -1,3 +1,5 @@
+build/
+
 dist/
 __pycache__
 .pytest_cache/
@@ -14,3 +16,7 @@ venv/
 export/
 testdata/export/
 temp/
+
+#aegis-backup files
+aegis-backup-*
+
