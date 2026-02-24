@@ -5,6 +5,7 @@ import os
 
 from src.entry_totp import EntryTOTP
 
+
 class Output:
     """
     Class to control the output format.
@@ -12,7 +13,13 @@ class Output:
 
     _FILENAME_PLAIN = "aegis-backup-plain"
 
-    def __init__(self, entries: list, entry_name:str|None = None, export_base_path: str = ".", search_term: str|None = None):
+    def __init__(
+        self,
+        entries: list,
+        entry_name: str | None = None,
+        export_base_path: str = ".",
+        search_term: str | None = None,
+    ):
         self._entries = entries
         self._export_path = export_base_path + "/export/"
         self._search_term = search_term
@@ -27,18 +34,17 @@ class Output:
                 + self._gen_filename(entry_name.lower())
             )
 
-
     def stdout(self) -> None:
         # TODO add columns header
         # TODO add groups
         for entry in self._entries:
-            
+
             # Print main entry info
             print(
                 f"{entry['uuid']}  {entry['type']:5}  {entry['name']:<45}  {entry['issuer']:<35}  {entry['info']['secret']}  {entry['info']['algo']:6}  {entry['info']['digits']:2}  {entry['info'].get('period', '')}"
             )
 
-            note = entry.get('note', '')
+            note = entry.get("note", "")
             # Only show note if --search is specified AND note contains the search term
             if self._search_term and note and self._search_term.lower() in note.lower():
                 self._print_note_context(note)
@@ -89,7 +95,7 @@ class Output:
                         entry["info"]["algo"],
                         entry["info"]["digits"],
                         entry["info"].get("period", ""),
-                        entry['note'],
+                        entry["note"],
                     ]
                 )
             print(f"Entries unencrypted saved as: {path}")
@@ -107,7 +113,7 @@ class Output:
                     f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - OTP type not supported: {entry.get('type', ''):<6}"
                 )
 
-            note = entry.get('note', '')
+            note = entry.get("note", "")
             # Only show note if --search is specified AND note contains the search term
             if self._search_term and note and self._search_term.lower() in note.lower():
                 self._print_note_context(note)
@@ -146,7 +152,7 @@ class Output:
         note_context = self._get_note_context(note)
         if note_context:
             # Indent note lines for better readability with box drawing characters
-            note_lines = note_context.split('\n')
+            note_lines = note_context.split("\n")
             print("  ┌─ Note:")
             for i, line in enumerate(note_lines):
                 if i == len(note_lines) - 1:
@@ -163,11 +169,13 @@ class Output:
         if not self._search_term or not note:
             return note
 
-        lines = note.split('\n')
+        lines = note.split("\n")
         search_lower = self._search_term.lower()
 
         # Find lines that contain the search term
-        matching_indices = [i for i, line in enumerate(lines) if search_lower in line.lower()]
+        matching_indices = [
+            i for i, line in enumerate(lines) if search_lower in line.lower()
+        ]
 
         if not matching_indices:
             return note  # Return full note if no match (shouldn't happen)
@@ -210,7 +218,7 @@ class Output:
         if sorted_indices[-1] < len(lines) - 1:
             result_lines.append("...")
 
-        return '\n'.join(result_lines)
+        return "\n".join(result_lines)
 
     def _valid_filename_char(self, c: str) -> bool:
         return c.isalpha() or c.isdigit() or c in "@_-"

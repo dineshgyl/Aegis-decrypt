@@ -1,4 +1,7 @@
 # Changelog
+## v0.0.8
+Renamed package.
+
 ## v0.0.7
 Added `--search` field and `otpauth` export (by `dineshgyl`).
 Added `--license` field.

@@ -8,6 +8,7 @@ import getpass
 import sys
 from os import path, getcwd
 from glob import glob
+from importlib.metadata import version
 
 from src.aegis_db import AegisDB
 from src.output import Output
@@ -19,16 +20,25 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         prog="aegis_decrypt.py",
-        description="Decrypt an Aegis vault and produce an output as requested. Exported and unencrypted files are placed in a folder `export/` created inside the folder where the vault is.",
+        description="Aegis Decrypt v"
+        + version("aegis_decrypt")
+        + ". This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions; type 'aegis_decrypt.py --license' for details. "
+        "This program decrypts an Aegis vault and produce an output as requested. Exported and unencrypted files are placed in a folder `export/` created inside the folder where the vault is.",
         add_help=True,
     )
+    parser.add_argument("--license", help="Show license file.", action="store_true")
     parser.add_argument(
         "--vault",
         dest="vault",
         required=False,
         help="The encrypted Aegis vault file or a folder containing only Aegis vault files. If it is a folder, the most recent file is considered.",
     )
-    # optional args
+    parser.add_argument(
+        "--password",
+        dest="password",
+        required=False,
+        help="The vault password. Use it at your own risk since terminal history is usually saved on the device.",
+    )
     parser.add_argument(
         "--entryname",
         dest="entryname",
@@ -51,21 +61,15 @@ def main() -> None:
         "--output",
         dest="output",
         required=False,
-        choices=["csv", "qrcode", "json", "otp", "stdout","otpauth"],
+        choices=["csv", "json", "otp", "otpauth", "qrcode", "stdout"],
         default="otp",
         help="The output format. OTP generation is supported only for TOTP protocol. Default: %(default)s",
     )
-    parser.add_argument(
-        "--password", dest="password", required=False, help="The encryption password."
-    )
-    parser.add_argument(
-        "--license",
-        help="Show license file.",
-        action="store_true")
+
     args = parser.parse_args()
 
     if args.license:
-        with open('LICENSE', 'r') as file:
+        with open("LICENSE", "r") as file:
             content = file.read()
         print(content)
         sys.exit()
@@ -96,10 +100,14 @@ def main() -> None:
         print(f"Found {len(entries)} entries.")
     else:
         entries = db.get_by_name(args.entryname, args.issuer)
-        print(f"Found {len(entries)} entries filtering by {args.entryname} entry name and {args.issuer} issuer.")
+        print(
+            f"Found {len(entries)} entries filtering by {args.entryname} entry name and {args.issuer} issuer."
+        )
 
     if entries:
-        output = Output(entries, args.entryname, path.dirname(db.get_db_path()), args.search)
+        output = Output(
+            entries, args.entryname, path.dirname(db.get_db_path()), args.search
+        )
 
         match args.output:
             case "csv":

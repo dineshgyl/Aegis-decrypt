@@ -29,8 +29,10 @@ class EntryTOTP:
         )
         if url:
             return url
-        raise Exception(f"Unable to generate otpauth url for entry {self._entry['name']} with issuer {self._entry['issuer']}")
-    
+        raise Exception(
+            f"Unable to generate otpauth url for entry {self._entry['name']} with issuer {self._entry['issuer']}"
+        )
+
     def generate_qr_code(self) -> QRCode:
         """
         Generate the QR Code for the current TOTP entry
@@ -40,4 +42,6 @@ class EntryTOTP:
         )
         if url:
             return pyqrcode.create(url)
-        raise Exception(f"Unable to generate QR Code for entry {self._entry['name']} with issuer {self._entry['issuer']}")
+        raise Exception(
+            f"Unable to generate QR Code for entry {self._entry['name']} with issuer {self._entry['issuer']}"
+        )

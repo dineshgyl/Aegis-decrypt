@@ -194,11 +194,13 @@ class AegisDB:
 
         for entry in self.get_all():
             # Search in top-level string fields
-            if (search_lower in entry.get("name", "").lower() or
-                search_lower in entry.get("issuer", "").lower() or
-                search_lower in entry.get("note", "").lower() or
-                search_lower in entry.get("uuid", "").lower() or
-                search_lower in entry.get("type", "").lower()):
+            if (
+                search_lower in entry.get("name", "").lower()
+                or search_lower in entry.get("issuer", "").lower()
+                or search_lower in entry.get("note", "").lower()
+                or search_lower in entry.get("uuid", "").lower()
+                or search_lower in entry.get("type", "").lower()
+            ):
                 entries_found.append(entry)
                 continue
 
@@ -209,7 +211,10 @@ class AegisDB:
                     if isinstance(value, str) and search_lower in value.lower():
                         entries_found.append(entry)
                         break
-                    elif isinstance(value, (int, float)) and search_lower in str(value).lower():
+                    elif (
+                        isinstance(value, (int, float))
+                        and search_lower in str(value).lower()
+                    ):
                         entries_found.append(entry)
                         break
 

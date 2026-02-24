@@ -10,7 +10,9 @@ def main() -> None:
     plain = "./testdata/aegis-backup-plain.json"
     encrypted = "./testdata/aegis-backup-encrypted-TEST.json"
 
-    print(f"Use this script at your own risk! It has been built mainly for testing purposes.")
+    print(
+        f"Use this script at your own risk! It has been built mainly for testing purposes."
+    )
     print(f"This script will encrypt the file {plain} and save it as {encrypted}.")
 
     with io.open(plain, "r", encoding="utf-8") as f:
