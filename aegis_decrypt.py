@@ -6,7 +6,7 @@ example usage: poetry run python aegis_decrypt.py -h
 import argparse
 import getpass
 import sys
-from os import path
+from os import path, getcwd
 from glob import glob
 
 from src.aegis_db import AegisDB
@@ -71,8 +71,8 @@ def main() -> None:
         sys.exit()
 
     if args.vault is None:
-        print("No vault specified.")
-        sys.exit()
+        args.vault = getcwd()
+        print(f"No vault specified. Using current directory: {args.vault}")
 
     if path.isfile(args.vault):
         db = AegisDB(args.vault, _get_password(args))
