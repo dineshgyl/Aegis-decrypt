@@ -6,7 +6,7 @@ example usage: poetry run python aegis_decrypt.py -h
 import argparse
 import getpass
 import sys
-from os import path
+from os import path, getcwd
 from glob import glob
 
 from src.aegis_db import AegisDB
@@ -64,22 +64,22 @@ def main() -> None:
         action="store_true")
     args = parser.parse_args()
 
-    if license:
+    if args.license:
         with open('LICENSE', 'r') as file:
             content = file.read()
         print(content)
         sys.exit()
 
     if args.vault is None:
-        print("No vault specified.")
-        sys.exit()
+        args.vault = getcwd()
+        print(f"No vault specified. Using current directory: {args.vault}")
 
     if path.isfile(args.vault):
         db = AegisDB(args.vault, _get_password(args))
     elif path.isdir(args.vault):
-        files = glob(path.join(args.vault, "*"))  # Get all files in the folder
+        files = glob(path.join(args.vault, "aegis-backup*.json"))  # Get only JSON files in the folder
         if not files:
-            raise ValueError(f"Directory {args.vault} is empty.")
+            raise ValueError(f"Directory {args.vault} contains no aegis-backup*.json vault files.")
 
         # Sort files by modification time (newest first)
         sorted_files = sorted(files, key=path.getmtime, reverse=True)
