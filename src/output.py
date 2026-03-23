@@ -139,8 +139,8 @@ class Output:
             next_expiry_total = time_remaining + period
             
             print(
-                f"\nCurrent Time: {current_time} {progress_bar} - "
-                f"Current TOTP expires in {time_remaining}s - Next TOTP expires in {next_expiry_total}s"
+                f"\nCurrent Time: {current_time} {progress_bar} "
+                f"\nCurrent TOTP expires in {time_remaining}s  \nNext TOTP expires in {next_expiry_total}s"
             )
 
     def json(self) -> None:
