@@ -74,17 +74,17 @@ class EntryTOTP:
 
     def get_progress_bar(self) -> str:
         """
-        Get a visual progress bar showing time elapsed (1 character per second)
-        █ = 1 second elapsed, ░ = 1 second remaining
+        Get a visual progress bar showing time elapsed with numeric labels
+        Bar is scaled to fixed width (30 chars) for readability
         """
         time_remaining = self.get_time_remaining()
         period = self._entry["info"]["period"]
-        
-        # Each character represents 1 second
-        # filled (█) = time elapsed, empty (░) = time remaining
         elapsed = period - time_remaining
-        remaining = time_remaining
         
-        # Use block characters for progress bar
-        bar = "█" * elapsed + "░" * remaining
-        return f"[{bar}]"
+        # Scale to fixed width (30 chars) for better readability
+        bar_width = 30
+        filled_width = int((elapsed / period) * bar_width)
+        empty_width = bar_width - filled_width
+        bar = "█" * filled_width + "░" * empty_width
+        
+        return f"[{bar}] {elapsed}s/{period}s ({time_remaining}s left)"
