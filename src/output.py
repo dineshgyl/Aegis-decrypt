@@ -101,12 +101,15 @@ class Output:
             print(f"Entries unencrypted saved as: {path}")
 
     def otp(self) -> None:
-        # Calculate timing info once from first TOTP entry
+        # Calculate timing info once from TOTP entry with shortest period
         first_totp = None
+        min_period = float('inf')
         for entry in self._entries:
             if entry.get("type", "") == "totp":
-                first_totp = EntryTOTP(entry)
-                break
+                period = entry["info"].get("period", 30)
+                if period < min_period:
+                    min_period = period
+                    first_totp = EntryTOTP(entry)
         
         # Display all entries
         for entry in self._entries:
