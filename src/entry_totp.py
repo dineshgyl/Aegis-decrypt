@@ -72,25 +72,6 @@ class EntryTOTP:
         """
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def get_current_expiry_timestamp(self) -> str:
-        """
-        Get timestamp when current TOTP expires
-        """
-        current_time = int(time.time())
-        period = self._entry["info"]["period"]
-        expiry_time = current_time + (period - (current_time % period))
-        return datetime.fromtimestamp(expiry_time).strftime("%Y-%m-%d %H:%M:%S")
-
-    def get_next_expiry_timestamp(self) -> str:
-        """
-        Get timestamp when next TOTP expires
-        """
-        current_time = int(time.time())
-        period = self._entry["info"]["period"]
-        time_remaining = period - (current_time % period)
-        next_expiry_time = current_time + time_remaining + period
-        return datetime.fromtimestamp(next_expiry_time).strftime("%Y-%m-%d %H:%M:%S")
-
     def get_progress_bar(self) -> str:
         """
         Get a visual progress bar showing time elapsed (1 character per second)
