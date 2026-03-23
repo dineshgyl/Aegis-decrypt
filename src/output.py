@@ -101,12 +101,24 @@ class Output:
             print(f"Entries unencrypted saved as: {path}")
 
     def otp(self) -> None:
+        # Calculate timing info once from first TOTP entry
+        first_totp = None
+        for entry in self._entries:
+            if entry.get("type", "") == "totp":
+                first_totp = EntryTOTP(entry)
+                break
+        
+        # Display all entries
         for entry in self._entries:
             # Print main entry info
             if entry.get("type", "") == "totp":
                 totp = EntryTOTP(entry)
+                current_code = totp.generate_code()
+                next_code = totp.get_next_code()
+                
                 print(
-                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - TOTP generated: {totp.generate_code():<6}"
+                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - "
+                    f"Current TOTP: {current_code:<6} - Next TOTP: {next_code:<6}"
                 )
             else:
                 print(
@@ -117,6 +129,19 @@ class Output:
             # Only show note if --search is specified AND note contains the search term
             if self._search_term and note and self._search_term.lower() in note.lower():
                 self._print_note_context(note)
+        
+        # Display timestamp, progress bar, and timing info once at the end
+        if first_totp is not None:
+            current_time = first_totp.get_current_timestamp()
+            progress_bar = first_totp.get_progress_bar()
+            time_remaining = first_totp.get_time_remaining()
+            period = first_totp._entry["info"]["period"]
+            next_expiry_total = time_remaining + period
+            
+            print(
+                f"\nCurrent Time: {current_time} {progress_bar} - "
+                f"Current TOTP expires in {time_remaining}s - Next TOTP expires in {next_expiry_total}s"
+            )
 
     def json(self) -> None:
         # TODO add aegis headers and groups
