@@ -1,4 +1,7 @@
 # Changelog
+## v0.0.9
+- Rewrote `qrcode` export for creating a printable PDF file with all QRCodes for provisionig the TOTP codes. Very useful for a paper backup.
+
 ## v0.0.8
 Renamed package.
 

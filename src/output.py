@@ -2,6 +2,13 @@ import csv
 import io
 import json
 import os
+from datetime import datetime
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 from src.entry_totp import EntryTOTP
 
@@ -10,29 +17,31 @@ class Output:
     """
     Class to control the output format.
     """
-
-    _FILENAME_PLAIN = "aegis-backup-plain"
-
     def __init__(
         self,
-        entries: list,
-        entry_name: str | None = None,
-        export_base_path: str = ".",
-        search_term: str | None = None,
-    ):
+            entries: list,
+            entry_name: str | None = None,
+            export_base_path: str = ".",
+            search_term: str | None = None,
+            source_filename: str | None = None,
+    ) -> None:
         self._entries = entries
         self._export_path = export_base_path + "/export/"
         self._search_term = search_term
 
         os.makedirs(os.path.dirname(self._export_path), exist_ok=True)
-        if entry_name is None:
-            self.file_path = self._export_path + self._FILENAME_PLAIN
+
+        # Derive the base name from the source filename (without extension) if provided,
+        # otherwise fall back to the default placeholder.
+        if source_filename:
+            self.file_path = self._export_path + os.path.splitext(os.path.basename(source_filename))[0]
         else:
-            self.file_path = (
-                self._export_path
-                + self._FILENAME_PLAIN
-                + self._gen_filename(entry_name.lower())
-            )
+            self.file_path = self._export_path + "aegis-backup"
+
+        if entry_name is None:
+            self.file_path += "-plain"
+        else:
+            self.file_path += self._gen_filename(entry_name.lower())
 
     def stdout(self) -> None:
         # TODO add columns header
@@ -50,8 +59,11 @@ class Output:
                 self._print_note_context(note)
 
     def otpauth(self) -> None:
-        # FIXME missing header
-        path = self.file_path + "_otpauth.csv"
+        """
+        Keepass compatible output
+        """
+        # TODO missing csv header
+        path = self.file_path + "-otpauth.csv"
 
         # Open file in write mode to overwrite if exists
         with open(path, "w", encoding="utf-8") as f:
@@ -129,24 +141,170 @@ class Output:
             print(f"Unencrypted vault saved as: {path}")
 
     def qrcode(self) -> None:
-        # TODO put all QRcodes in a well formatted PDF
+        """
+        Generate a single A4 PDF containing all TOTP QR codes,
+        each labelled with its entry name (and issuer). Multiple pages
+        are created automatically when needed.
+
+        Under each QR code the full otpauth:// URL is printed (wrapped
+        to fit the cell width). The source filename and the generation
+        date are printed as a header on every page.
+        """
+        path = self.file_path + "-qrcodes.pdf"
+
+        # --- Page / grid configuration -------------------------------------
+        page_width, page_height = A4
+        margin = 10 * mm
+        cols, rows = 4, 5                       # 20 QR codes per page
+        per_page = cols * rows
+
+        usable_width = page_width - 2 * margin
+        usable_height = page_height - 2 * margin
+        cell_width = usable_width / cols
+        cell_height = usable_height / rows
+
+        qr_size = min(cell_width, cell_height) - 12 * mm   # leave room for caption
+        qr_frame_padding = 1.5 * mm                        # space between QR and its frame
+        caption_font_size = 8
+        url_font_size = 5
+        url_font_name = "Courier"
+        url_line_gap = 1.1                                 # multiplier for line height
+        header_font_size = 9
+        # -------------------------------------------------------------------
+
+        # Collect only the entries we can actually render
+        totp_entries = []
         for entry in self._entries:
             if entry.get("type", "") == "totp":
-                totp = EntryTOTP(entry)
-                img = totp.generate_qr_code()
-                save_filename = (
-                    self._export_path
-                    + self._gen_filename(entry.get("name"), entry.get("issuer"))
-                    + ".png"
-                )
-                img.png(save_filename, scale=4, background="#fff")
-                print(
-                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<35} - TOTP QRCode saved as: {save_filename:<100}"
-                )
+                totp_entries.append(entry)
             else:
                 print(
-                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<35} - OTP type not supported: {entry.get('type', ''):<6}"
+                    f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<35} "
+                    f"- OTP type not supported: {entry.get('type', ''):<6}"
                 )
+
+        if not totp_entries:
+            print("No TOTP entries found - PDF not generated.")
+            return
+
+        # Header info: source filename + current date
+        source_name = os.path.basename(self.file_path)
+        generated_on = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        header_text = f"{source_name} - {len(totp_entries)} Codes - Generated: {generated_on}"
+
+        pdf = canvas.Canvas(path, pagesize=A4)
+        pdf.setTitle(header_text)
+        pdf.setAuthor("aegis-decrypt")
+        pdf.setSubject(header_text)
+
+        def _draw_header() -> None:
+            pdf.saveState()
+            pdf.setFont("Helvetica-Oblique", header_font_size)
+            pdf.setFillColorRGB(0.3, 0.3, 0.3)
+            pdf.drawString(margin, page_height - margin / 2, header_text)
+            pdf.restoreState()
+
+        def _wrap_to_width(text: str, font_name: str, font_size: int, max_width: float) -> list[str]:
+            """
+            Break a (possibly very long) string into chunks whose rendered
+            width does not exceed ``max_width``. Splitting is purely
+            character-based, which is exactly what we want for URLs.
+            """
+            lines: list[str] = []
+            current = ""
+            for ch in text:
+                if pdf.stringWidth(current + ch, font_name, font_size) <= max_width:
+                    current += ch
+                else:
+                    if current:
+                        lines.append(current)
+                    current = ch
+            if current:
+                lines.append(current)
+            return lines
+
+        _draw_header()
+
+        for index, entry in enumerate(totp_entries):
+            position_on_page = index % per_page
+            col = position_on_page % cols
+            row = position_on_page // cols
+
+            # Cell origin (bottom-left of the cell in PDF coordinates)
+            cell_x = margin + col * cell_width
+            cell_y = page_height - margin - (row + 1) * cell_height
+
+            # --- Cell separator (light grey, dashed) -----------------------
+            pdf.saveState()
+            pdf.setStrokeColorRGB(0.75, 0.75, 0.75)
+            pdf.setLineWidth(0.3)
+            pdf.setDash(2, 2)
+            pdf.rect(cell_x, cell_y, cell_width, cell_height, stroke=1, fill=0)
+            pdf.restoreState()
+
+            # Generate QR PNG into an in-memory buffer
+            totp = EntryTOTP(entry)
+            qr_img = totp.generate_qr_code()
+            otpauth_url = totp.generate_otpauthurl()
+            buffer = io.BytesIO()
+            qr_img.png(buffer, scale=4, background="#fff")
+            buffer.seek(0)
+
+            # Center the QR image horizontally inside its cell, place near the top
+            qr_x = cell_x + (cell_width - qr_size) / 2
+            qr_y = cell_y + cell_height - qr_size - 4 * mm
+
+            # --- Frame around the QR code (solid, darker) ------------------
+            pdf.saveState()
+            pdf.setStrokeColorRGB(0.2, 0.2, 0.2)
+            pdf.setLineWidth(0.6)
+            pdf.rect(
+                qr_x - qr_frame_padding,
+                qr_y - qr_frame_padding,
+                qr_size + 2 * qr_frame_padding,
+                qr_size + 2 * qr_frame_padding,
+                stroke=1,
+                fill=0,
+            )
+            pdf.restoreState()
+
+            pdf.drawImage(
+                ImageReader(buffer),
+                qr_x, qr_y,
+                width=qr_size, height=qr_size,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
+
+            # Caption: "<name> (<issuer>)"
+            name = entry.get("name", "") or ""
+            issuer = entry.get("issuer", "") or ""
+            caption = f"{name} ({issuer})" if issuer else name
+
+            pdf.setFont("Courier", caption_font_size)
+            text_y = qr_y - qr_frame_padding - 4 * mm
+            pdf.drawCentredString(cell_x + cell_width / 2, text_y, caption)
+
+            # --- Full otpauth URL printed under the caption ----------------
+            url_max_width = cell_width - 4 * mm
+            url_lines = _wrap_to_width(
+                otpauth_url, url_font_name, url_font_size, url_max_width
+            )
+            pdf.setFont(url_font_name, url_font_size)
+            pdf.setFillColorRGB(0.25, 0.25, 0.25)
+            url_y = text_y - url_font_size - 1 * mm
+            for line in url_lines:
+                pdf.drawCentredString(cell_x + cell_width / 2, url_y, line)
+                url_y -= url_font_size * url_line_gap
+            pdf.setFillColorRGB(0, 0, 0)
+
+            # End of page -> flush
+            if position_on_page == per_page - 1 and index != len(totp_entries) - 1:
+                pdf.showPage()
+                _draw_header()
+
+        pdf.save()
+        print(f"PDF for {len(totp_entries)} QR Codes saved as: {path}")
 
     def _print_note_context(self, note) -> None:
         note_context = self._get_note_context(note)

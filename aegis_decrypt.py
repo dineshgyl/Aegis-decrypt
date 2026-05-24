@@ -63,7 +63,7 @@ def main() -> None:
         required=False,
         choices=["csv", "json", "otp", "otpauth", "qrcode", "stdout"],
         default="otp",
-        help="The output format. OTP generation is supported only for TOTP protocol. Default: %(default)s",
+        help="The output format. OTP generation is supported only for TOTP protocol. `qrcode` is the most suitable format for printing a paper backup. Default: %(default)s",
     )
 
     args = parser.parse_args()
@@ -81,9 +81,13 @@ def main() -> None:
     if path.isfile(args.vault):
         db = AegisDB(args.vault, _get_password(args))
     elif path.isdir(args.vault):
-        files = glob(path.join(args.vault, "aegis-backup*.json"))  # Get only JSON files in the folder
+        files = glob(
+            path.join(args.vault, "aegis-backup*.json")
+        )  # Get only JSON files in the folder
         if not files:
-            raise ValueError(f"Directory {args.vault} contains no aegis-backup*.json vault files.")
+            raise ValueError(
+                f"Directory {args.vault} contains no aegis-backup*.json vault files."
+            )
 
         # Sort files by modification time (newest first)
         sorted_files = sorted(files, key=path.getmtime, reverse=True)
@@ -106,7 +110,11 @@ def main() -> None:
 
     if entries:
         output = Output(
-            entries, args.entryname, path.dirname(db.get_db_path()), args.search
+            entries=entries,
+            entry_name=args.entryname,
+            export_base_path=path.dirname(db.get_db_path()),
+            search_term=args.search,
+            source_filename=db.get_db_path()
         )
 
         match args.output:
