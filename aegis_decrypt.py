@@ -61,7 +61,7 @@ def main() -> None:
         "--output",
         dest="output",
         required=False,
-        choices=["csv", "json", "otp", "otpauth", "qrcode", "stdout"],
+        choices=["csv", "csv_otpauth", "json", "otp", "qrcode", "stdout"],
         default="otp",
         help="The output format. OTP generation is supported only for TOTP protocol. `qrcode` is the most suitable format for printing a paper backup. Default: %(default)s",
     )
@@ -120,14 +120,14 @@ def main() -> None:
         match args.output:
             case "csv":
                 output.csv()
+            case "csv_otpauth":
+                output.csv_otpauth()
             case "qrcode":
                 output.qrcode()
             case "json":
                 output.json()
             case "otp":
                 output.otp()
-            case "otpauth":
-                output.otpauth()
             case "stdout":
                 output.stdout()
 

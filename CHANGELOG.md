@@ -1,6 +1,7 @@
 # Changelog
 ## v0.0.9
 - Rewrote `qrcode` export for creating a printable PDF file with all QRCodes for provisionig the TOTP codes. Very useful for a paper backup.
+- Improved `csv_otpauth` for importing the file to KeepassXC.
 
 ## v0.0.8
 Renamed package.

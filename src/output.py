@@ -58,20 +58,37 @@ class Output:
             if self._search_term and note and self._search_term.lower() in note.lower():
                 self._print_note_context(note)
 
-    def otpauth(self) -> None:
+    def csv_otpauth(self) -> None:
         """
-        Keepass compatible output
+        Keepass compatible output with OtpAuth provisioning urls.
         """
-        # TODO missing csv header
         path = self.file_path + "-otpauth.csv"
 
         # Open file in write mode to overwrite if exists
-        with open(path, "w", encoding="utf-8") as f:
+        with io.open(path, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            header = ["Group", "Title", "Username", "TOTP", "Notes"]
+            writer.writerow(header)
+            generated_on = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             for entry in self._entries:
                 if entry.get("type", "") == "totp":
                     totp = EntryTOTP(entry)
-                    Lurl = totp.generate_otpauthurl()
-                    f.write(Lurl + "\n")
+                    # TODO add group names
+                    groups = entry.get("groups", []) or []
+                    notes_group = "Group(s) that this item belongs to: " + ",".join(groups) if groups else ""
+                    entry_note = entry.get("note", "")
+                    if entry_note:
+                        separator = " - Notes: " if notes_group else ""
+                        notes_group += separator + entry_note
+                    writer.writerow(
+                        [
+                            f"Aegis Export generated on {generated_on}",
+                            entry.get("issuer", ""),
+                            entry.get("name", ""),
+                            totp.generate_otpauthurl(),
+                            notes_group,
+                        ]
+                    )
                 else:
                     print(
                         f"Entry {entry.get('name', ''):<45} - Issuer {entry.get('issuer', ''):<30} - OTP type not supported: {entry.get('type', ''):<6}"
