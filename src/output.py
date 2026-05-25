@@ -193,7 +193,6 @@ class Output:
     def json(self) -> None:
         # TODO add aegis headers and groups
         path = self.file_path + ".json"
-        print(f"SourceFIle: {self._export_path}")
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(json.dumps(self._entries, indent=4))
             print(
