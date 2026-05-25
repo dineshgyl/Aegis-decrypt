@@ -1,5 +1,5 @@
 # Aegis-decrypt
-A backup decryptor and OTP generator for the vault of the [Aegis Authenticator](https://getaegis.app/) Android app, inspired by [asmw/andOTP-decrypt](https://github.com/asmw/andOTP-decrypt). It allows to decrypt the Aegis vault and export its values in different unencrypted formats (stdout, CSV, QRCode, Json). It also allows to generate TOTP codes on the fly (HOTP/Stream not supported).
+A backup decryptor and OTP generator for the vault of the [Aegis Authenticator](https://getaegis.app/) Android app, inspired by [asmw/andOTP-decrypt](https://github.com/asmw/andOTP-decrypt). It allows to decrypt the Aegis vault and export its values in different unencrypted formats (stdout, CSV, CSV for Keepass import, QRCodes in a PDF, Json). `qrcode` is the most suitable format for printing a paper backup. It also allows to generate TOTP codes on the fly (HOTP/Stream not supported).
 
 :warning: The project is in active development. See below for [some ideas to implement](#Contributing). :warning:
 
@@ -11,7 +11,7 @@ After installing it with Poetry, run `poetry run python aegis_decrypt.py -h`.
 
 The output is:
 ```
-usage: aegis_decrypt.py [-h] [--vault VAULT] [--entryname ENTRYNAME] [--issuer ISSUER] [--search SEARCH] [--output {csv,qrcode,json,otp,stdout,otpauth}] [--password PASSWORD]
+usage: aegis_decrypt.py [-h] [--vault VAULT] [--entryname ENTRYNAME] [--issuer ISSUER] [--search SEARCH] [--output {csv,csv_otpauth,qrcode,json,otp,stdout}] [--password PASSWORD]
                         [--license]
 
 Decrypt an Aegis vault and produce an output as requested. Exported and unencrypted files are placed in a folder `export/` created inside the folder where the vault is.
@@ -23,8 +23,8 @@ options:
                         The name of the entry for which you want to generate the output.
   --issuer ISSUER       The name of the issuer for which you want to generate the output.
   --search SEARCH       Search for a string in all fields of all entries including the note field.
-  --output {csv,qrcode,json,otp,stdout,otpauth}
-                        The output format. OTP generation is supported only for TOTP protocol. Default: otp
+  --output {csv,csv_otpauth,qrcode,json,otp,stdout}
+                        The output format. OTP generation is supported only for TOTP protocol. `qrcode` is the most suitable format for printing a paper backup. Default: otp
   --password PASSWORD   The encryption password.
   --license             Show license file.
 ```
@@ -53,8 +53,6 @@ Since this repo is spread across several remotes, it may happen that there are s
 Contributions are welcome. Some ideas to implement:
 - filter outputs by groups
 - cool terminal output as a nice table
-- export QRCodes in a unique PDF or HTML (simple paper backup)
-- export CSV in a KeepassXC compatible format for importing TOTP to that database
 - support for HOTP/Steam format
 - install this script as a system tool
 - save and remove password from OS keychain, MacOS TouchId, ...
