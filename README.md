@@ -51,11 +51,12 @@ Since this repo is spread across several remotes, it may happen that there are s
 
 ## Contributing
 Contributions are welcome. Some ideas to implement:
-- filter outputs by groups
-- cool terminal output as a nice table
-- support for HOTP/Steam format
 - install this script as a system tool
+- PDF: add page numbers; use monospace font for otpauth strings
 - save and remove password from OS keychain, MacOS TouchId, ...
+- cool terminal output as a nice table
+- change library pyqrcode to https://github.com/lincolnloop/python-qrcode
+- support for HOTP/Steam format
 
 ## Contributors
 - [asmw](https://github.com/asmw): original andOTP-decrypt repository on GitHub
