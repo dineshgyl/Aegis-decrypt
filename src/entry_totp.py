@@ -56,7 +56,7 @@ class EntryTOTP:
             self._entry["name"], issuer_name=self._entry["issuer"]
         )
         if url:
-            return pyqrcode.create(url)
+            return pyqrcode.create(content=url, error='H')
         raise Exception(
             f"Unable to generate QR Code for entry {self._entry['name']} with issuer {self._entry['issuer']}"
         )

@@ -21,9 +21,8 @@ dependencies = [
     "reportlab (>=4.5.1,<5.0.0)",
 ]
 
-
 [project.urls]
-repository = "https://gitlab.com/scollovati/Aegis-decrypt"
+repository = "https://codeberg.org/scollovati/Aegis-decrypt"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
