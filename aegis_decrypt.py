@@ -6,6 +6,7 @@ example usage: poetry run python aegis_decrypt.py -h
 import argparse
 import getpass
 import sys
+import keyring
 from os import path, getcwd
 import os
 from glob import glob
@@ -170,12 +171,27 @@ def _get_password(args) -> str:
         return password
     
     #3  AEGIS_DECRYPT_PASSWORD environment variable
+        ## set in powershell: $env:AEGIS_DECRYPT_PASSWORD = 'xxxxxx'
+        ## set in cmd: set "AEGIS_DECRYPT_PASSWORD=xxxxxx"
+        ## delete in powershell: $env:AEGIS_DECRYPT_PASSWORD = $null
+        ## delete in cmd: set "AEGIS_DECRYPT_PASSWORD="
+
     password = os.environ.get("AEGIS_DECRYPT_PASSWORD")
     if password is not None:
         print("Password found in environment variable AEGIS_DECRYPT_PASSWORD.")
         return password
 
-    # 4. Interactive prompt
+    # 4. Windows/Linux Credential Manager
+        ## Set the password - python -m keyring set aegis_decrypt vault
+        ## Get the password - python -m keyring get aegis_decrypt vault
+        ## update the password - python -m keyring set aegis_decrypt vault
+        ## Delete the password - python -m keyring del aegis_decrypt vault
+    password = keyring.get_password("aegis_decrypt", "vault")
+    if password is not None:
+        print("Password found in OS Credential Manager.")
+        return password
+    
+    # 5. Interactive prompt
     return getpass.getpass("Vault password: ") 
 
 
