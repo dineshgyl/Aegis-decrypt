@@ -7,6 +7,7 @@ import argparse
 import getpass
 import sys
 from os import path, getcwd
+import os
 from glob import glob
 from importlib.metadata import version
 
@@ -33,12 +34,22 @@ def main() -> None:
         required=False,
         help="The encrypted Aegis vault file or a folder containing only Aegis vault files. If it is a folder, the most recent file is considered.",
     )
-    parser.add_argument(
+    password_group = parser.add_mutually_exclusive_group()
+
+    password_group.add_argument(
         "--password",
         dest="password",
         required=False,
         help="The vault password. Use it at your own risk since terminal history is usually saved on the device.",
     )
+
+    password_group.add_argument(
+        "--password-file",
+        dest="password_file",
+        required=False,
+        help="Read the vault password from the specified file.",
+    )
+
     parser.add_argument(
         "--entryname",
         dest="entryname",
@@ -136,11 +147,36 @@ def main() -> None:
 
 
 def _get_password(args) -> str:
-    if args.password is None:
-        password = getpass.getpass()
-    else:
-        password = args.password
-    return password
+
+    # 1. --password
+    if args.password is not None:
+        return args.password
+    
+    # 2. --password-file
+    if args.password_file is not None:
+        try:
+            with open(args.password_file, "r") as file:
+                password = file.read().rstrip("\r\n")
+        except OSError as e:
+            raise ValueError(
+                f"Unable to read password file '{args.password_file}': {e}"
+            ) from e
+
+        if not password:
+            raise ValueError(
+                f"Password file '{args.password_file}' is empty."
+            )
+
+        return password
+    
+    #3  AEGIS_DECRYPT_PASSWORD environment variable
+    password = os.environ.get("AEGIS_DECRYPT_PASSWORD")
+    if password is not None:
+        print("Password found in environment variable AEGIS_DECRYPT_PASSWORD.")
+        return password
+
+    # 4. Interactive prompt
+    return getpass.getpass("Vault password: ") 
 
 
 if __name__ == "__main__":
