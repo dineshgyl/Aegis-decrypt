@@ -16,14 +16,11 @@ from src.aegis_db import AegisDB
 from src.output import Output
 from datetime import datetime
 
-AEGIS_DECRYPT_BUILD_TIMESTAMP = datetime.fromtimestamp(
-    path.getmtime(sys.executable)
-).astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
-
 def main() -> None:
     """
     Aegis decryptor main function.
     """
+    AEGIS_DECRYPT_BUILD_TIMESTAMP = datetime.fromtimestamp(path.getmtime(sys.executable)).astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
     print(f"Build timestamp: {AEGIS_DECRYPT_BUILD_TIMESTAMP}")
     parser = argparse.ArgumentParser(
         prog="aegis_decrypt.py",
