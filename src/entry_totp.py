@@ -98,7 +98,7 @@ class EntryTOTP:
         bar_width = 30
         filled_width = int((elapsed / period) * bar_width)
         empty_width = bar_width - filled_width
-        bar = "█" * filled_width + "░" * empty_width
+        bar = "#" * filled_width + "-" * empty_width
         
         return f"[{bar}] {elapsed}s/{period}s ({time_remaining}s left)"
     

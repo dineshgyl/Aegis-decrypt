@@ -180,13 +180,13 @@ class Output:
         # Display timestamp, progress bar, and timing info once at the end
         if first_totp is not None:
             current_time = first_totp.get_current_timestamp()
-            progress_bar = first_totp.get_progress_bar()
             time_remaining = first_totp.get_time_remaining()
             period = first_totp._entry["info"]["period"]
+            current_progress_bar = first_totp.get_progress_bar()
             next_expiry_total = time_remaining + period
             
             print(
-                f"\nCurrent TOTP {progress_bar} "
+                f"\nCurrent TOTP {current_progress_bar} "
                 f"\nNext TOTP expires in {next_expiry_total}s\nCurrent Time: {current_time}"
             )
 
