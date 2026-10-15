@@ -89,24 +89,56 @@ def main() -> None:
         sys.exit()
 
     if args.vault is None:
-        args.vault = getcwd()
-        print(f"No vault specified. Using current directory: {args.vault}")
+        search_dirs = [getcwd()]
+        # Add the directory containing the executable (PyInstaller compatible)
+        exe_dir = path.dirname(path.abspath(sys.executable))
+        if exe_dir not in search_dirs:
+            search_dirs.append(exe_dir)
+
+        print("No vault specified. Searching directories:")
+        for directory in search_dirs:
+            print(f"  {directory}")
+
+        # Search all directories for vault files
+        vault_files = []
+        for directory in search_dirs:
+            vault_files.extend(glob(path.join(directory, "aegis-backup*.json")))
+
+        if not vault_files:
+            searched_dirs = "\n".join(f"  {d}" for d in search_dirs)
+            raise ValueError(
+                f"No aegis-backup*.json vault files found in:\n{searched_dirs}"
+            )
+
+        # Sort by modification time (newest first)
+        sorted_vault_files = sorted(vault_files, key=path.getmtime, reverse=True)
+        print("Found vault files (newest first):")
+        for i, vault_file in enumerate(sorted_vault_files, start=1):
+            print(f"  {i}. {vault_file}")
+
+        args.vault = sorted_vault_files[0]
+        print(f"No vault specified. Using file: {args.vault}")
+        
 
     if path.isfile(args.vault):
         db = AegisDB(args.vault, _get_password(args))
     elif path.isdir(args.vault):
-        files = glob(
+        vault_files = glob(
             path.join(args.vault, "aegis-backup*.json")
         )  # Get only JSON files in the folder
-        if not files:
+        if not vault_files:
             raise ValueError(
                 f"Directory {args.vault} contains no aegis-backup*.json vault files."
             )
 
         # Sort files by modification time (newest first)
-        sorted_files = sorted(files, key=path.getmtime, reverse=True)
-        print(f"Using file {sorted_files[0]}")
-        db = AegisDB(sorted_files[0], _get_password(args))
+        sorted_vault_files = sorted(vault_files, key=path.getmtime, reverse=True)
+        print(f"Directory {args.vault} - Found vault files (newest first): ")
+        for i, vault_file in enumerate(sorted_vault_files, start=1):
+            #print(f"  {i}. {vault_file} (modified: {datetime.fromtimestamp(path.getmtime(vault_file)):%Y-%m-%d %H:%M:%S})")
+            print(f"  {i}. {vault_file} ")
+        print(f"Using file {sorted_vault_files[0]}")
+        db = AegisDB(sorted_vault_files[0], _get_password(args))
     else:
         raise ValueError(f"Invalid file or folder: {args.vault}")
 
