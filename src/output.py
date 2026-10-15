@@ -371,12 +371,14 @@ class Output:
         if note_context:
             # Indent note lines for better readability with box drawing characters
             note_lines = note_context.split("\n")
-            print("  ┌─ Note:")
+            #print("  ┌─ Note:")
+            print("  +========== [Note:]")
             for i, line in enumerate(note_lines):
                 if i == len(note_lines) - 1:
-                    print(f"  └─ {line}")
+                    #print(f"  └─ {line}")
+                    print(f"  +_________ {line}")
                 else:
-                    print(f"  │  {line}")
+                    print(f"  |  {line}")
             print()  # Empty line after note for separation
 
     def _get_note_context(self, note: str) -> str:
