@@ -21,7 +21,7 @@ def main() -> None:
     Aegis decryptor main function.
     """
     AEGIS_DECRYPT_BUILD_TIMESTAMP = datetime.fromtimestamp(path.getmtime(sys.executable)).astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
-    print(f"Build timestamp: {AEGIS_DECRYPT_BUILD_TIMESTAMP}")
+    print(f"Build timestamp: {AEGIS_DECRYPT_BUILD_TIMESTAMP}", flush=True)
     parser = argparse.ArgumentParser(
         prog="aegis_decrypt.py",
         description="Aegis Decrypt v"
@@ -95,10 +95,6 @@ def main() -> None:
         if exe_dir not in search_dirs:
             search_dirs.append(exe_dir)
 
-        print("No vault specified. Searching directories:")
-        for directory in search_dirs:
-            print(f"  {directory}")
-
         # Search all directories for vault files
         vault_files = []
         for directory in search_dirs:
@@ -110,14 +106,19 @@ def main() -> None:
                 f"No aegis-backup*.json vault files found in:\n{searched_dirs}"
             )
 
+        print("No vault specified. Searching directories:", flush=True)
+        for directory in search_dirs:
+            print(f"  {directory}", flush=True)
+
         # Sort by modification time (newest first)
         sorted_vault_files = sorted(vault_files, key=path.getmtime, reverse=True)
-        print("Found vault files (newest first):")
-        for i, vault_file in enumerate(sorted_vault_files, start=1):
-            print(f"  {i}. {vault_file}")
+        if len(sorted_vault_files) > 1:
+            print("Found vault files (newest first):", flush=True)
+            for i, vault_file in enumerate(sorted_vault_files, start=1):
+                print(f"  {i}. {vault_file}")
 
         args.vault = sorted_vault_files[0]
-        print(f"No vault specified. Using file: {args.vault}")
+        print(f"No vault specified. Using file: {args.vault}", flush=True)
         
 
     if path.isfile(args.vault):
@@ -133,12 +134,16 @@ def main() -> None:
 
         # Sort files by modification time (newest first)
         sorted_vault_files = sorted(vault_files, key=path.getmtime, reverse=True)
-        print(f"Directory {args.vault} - Found vault files (newest first): ")
-        for i, vault_file in enumerate(sorted_vault_files, start=1):
-            #print(f"  {i}. {vault_file} (modified: {datetime.fromtimestamp(path.getmtime(vault_file)):%Y-%m-%d %H:%M:%S})")
-            print(f"  {i}. {vault_file} ")
-        print(f"Using file {sorted_vault_files[0]}")
+
+        if len(sorted_vault_files) > 1:
+            print(f"Directory {args.vault} - Found vault files (newest first): ", flush=True)
+            for i, vault_file in enumerate(sorted_vault_files, start=1):
+                #print(f"  {i}. {vault_file} (modified: {datetime.fromtimestamp(path.getmtime(vault_file)):%Y-%m-%d %H:%M:%S})")
+                print(f"  {i}. {vault_file} ", flush=True)
+
+        print(f"Using file {sorted_vault_files[0]}", flush=True)
         db = AegisDB(sorted_vault_files[0], _get_password(args))
+        
     else:
         raise ValueError(f"Invalid file or folder: {args.vault}")
 
